@@ -1188,3 +1188,380 @@ textarea.form-input {
     line-height: 1.5;
   }
 }
+
+/* ==========================================================================
+   ADMINISTRATIVE GLASS PANEL & SECURE ANALYTICS
+   ========================================================================== */
+
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 3, 12, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.admin-panel {
+  background: rgba(8, 8, 20, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 950px;
+  max-height: 85vh;
+  box-shadow: 
+    0 40px 80px rgba(0, 0, 0, 0.7),
+    0 0 50px rgba(0, 242, 254, 0.04),
+    0 0 1px 1px rgba(127, 0, 255, 0.15) inset;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.admin-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent-gradient);
+}
+
+/* Panel Header */
+.admin-panel-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-header-title {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #39ff14;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #39ff14;
+  display: inline-block;
+  animation: adminPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes adminPulse {
+  0% { transform: scale(0.9); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 16px #39ff14, 0 0 4px #39ff14; }
+  100% { transform: scale(0.9); opacity: 0.4; }
+}
+
+.admin-close-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.admin-close-btn:hover {
+  background: rgba(255, 0, 85, 0.1);
+  border-color: rgba(255, 0, 85, 0.3);
+  color: #ff0055;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.15);
+}
+
+/* Panel Scroll Content */
+.admin-panel-content {
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  flex-grow: 1;
+}
+
+.admin-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-panel-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.admin-panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* Metric Display Card */
+.admin-metric-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 24px 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.total-card::after {
+  content: '';
+  position: absolute;
+  right: -50px;
+  bottom: -50px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(0, 242, 254, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-label {
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.card-value {
+  font-family: var(--font-title);
+  font-size: clamp(2.5rem, 6vw, 4.2rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 25px rgba(0, 242, 254, 0.25);
+  margin-bottom: 12px;
+}
+
+.card-footer {
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  color: #39ff14;
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.25);
+  font-weight: 600;
+}
+
+/* Grid Layout */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.admin-section-box {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.box-title {
+  font-family: var(--font-title);
+  font-size: 0.82rem;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+  font-weight: 700;
+}
+
+/* Pages list with bars */
+.page-stat-item {
+  margin-bottom: 20px;
+}
+
+.page-stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.page-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.page-name {
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.page-count-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.page-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.page-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: var(--accent-gradient);
+  transform-origin: left center;
+  scale-x: 0; /* Animated dynamically with GSAP */
+}
+
+/* Feed logs list */
+.logs-feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.logs-feed-container::-webkit-scrollbar {
+  width: 4px;
+}
+.logs-feed-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.logs-feed-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+}
+
+.log-entry {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 12px 16px;
+  transition: background var(--transition-fast);
+}
+
+.log-entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.log-entry.loading, .log-entry.empty {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 40px 10px;
+  border-style: dashed;
+}
+
+.log-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.log-badge {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.badge-inicio {
+  background: rgba(0, 242, 254, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 242, 254, 0.2);
+}
+
+.badge-sobre-mi {
+  background: rgba(127, 0, 255, 0.1);
+  color: #a855f7;
+  border: 1px solid rgba(127, 0, 255, 0.2);
+}
+
+.badge-proyectos {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.badge-contacto {
+  background: rgba(57, 255, 20, 0.1);
+  color: #39ff14;
+  border: 1px solid rgba(57, 255, 20, 0.2);
+}
+
+.badge-other {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-time {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.log-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.log-device, .log-ref {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   RESPONSIVENESS FOR ADMIN PANEL
+   ========================================================================== */
+@media (max-width: 768px) {
+  .admin-overlay {
+    padding: 15px;
+  }
+  
+  .admin-panel-header {
+    padding: 16px 20px;
+  }
+  
+  .admin-panel-content {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .admin-metric-card {
+    padding: 20px;
+  }
+}
+
