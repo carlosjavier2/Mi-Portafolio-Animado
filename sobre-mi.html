@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sobre mí - Ingeniero Civil especializado en desarrollo de software y automatización.">
+  <title>Sobre Mí | Portafolio Futurista</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="glow-orb glow-orb-1" id="orb-1"></div>
+  <div class="glow-orb glow-orb-2" id="orb-2"></div>
+
+  <header class="header" id="main-header">
+    <a href="index.html" class="logo">FUTURO<span>//</span></a>
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="index.html"     class="nav-link"        id="link-inicio">Inicio</a></li>
+        <li><a href="sobre-mi.html"  class="nav-link active"  id="link-sobre-mi">Sobre mí</a></li>
+        <li><a href="proyectos.html" class="nav-link"        id="link-proyectos">Proyectos</a></li>
+        <li><a href="contacto.html"  class="nav-link"        id="link-contacto">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-content" id="page-content">
+    <div class="section-label">Perfil del Sistema</div>
+    <h1 class="section-title">SOBRE <span>MÍ</span></h1>
+
+    <div class="about-grid">
+      <!-- Columna Izquierda: Biografía -->
+      <div class="about-text">
+        <p>
+          Hola, soy un desarrollador enfocado en fusionar la rigurosidad técnica con la creatividad digital. Vengo de un trasfondo poco convencional: me gradué y trabajé como <strong>Ingeniero Civil</strong>, diseñando estructuras de concreto y acero, y gestionando obras de gran envergadura.
+        </p>
+        <p>
+          Durante mi trayectoria en la construcción, descubrí que mi verdadera pasión no era solo levantar estructuras físicas, sino <strong>construir algoritmos y automatizar procesos</strong> complejos. La necesidad de optimizar cálculos manuales repetitivos — metrados, presupuestos, cronogramas — me llevó al mundo del desarrollo de software.
+        </p>
+        <p>
+          Comencé con scripts de Python para automatizar hojas de cálculo, luego pasé a construir aplicaciones web completas. Hoy en día, aplico la <strong>precisión estructural, el pensamiento analítico y la metodología de gestión de proyectos</strong> de mi etapa ingenieril para crear interfaces web fluidas, interactivas y herramientas de automatización de datos de alto rendimiento.
+        </p>
+        <p>
+          Esta combinación única me permite hablar el idioma del ingeniero de obra y del desarrollador de software al mismo tiempo, creando soluciones que resuelven problemas reales del sector de la construcción con tecnología de vanguardia.
+        </p>
+      </div>
+
+      <!-- Columna Derecha: Panel Técnico -->
+      <div class="about-visual">
+        <div class="tech-panel">
+          <div class="tech-panel-header">
+            <span>ING. CIVIL // DEV PROFILE</span>
+            <span class="tech-panel-status">ONLINE</span>
+          </div>
+          <div class="tech-stat-group">
+            <div class="tech-stat-info">
+              <span class="tech-stat-label">Estructuración de Código</span>
+              <span class="tech-stat-val">95%</span>
+            </div>
+            <div class="tech-stat-bar-bg"><div class="tech-stat-bar-fill" data-progress="95%"></div></div>
+          </div>
+          <div class="tech-stat-group">
+            <div class="tech-stat-info">
+              <span class="tech-stat-label">Precisión Estructural &amp; QA</span>
+              <span class="tech-stat-val">98%</span>
+            </div>
+            <div class="tech-stat-bar-bg"><div class="tech-stat-bar-fill" data-progress="98%"></div></div>
+          </div>
+          <div class="tech-stat-group">
+            <div class="tech-stat-info">
+              <span class="tech-stat-label">Automatización de Datos</span>
+              <span class="tech-stat-val">90%</span>
+            </div>
+            <div class="tech-stat-bar-bg"><div class="tech-stat-bar-fill" data-progress="90%"></div></div>
+          </div>
+          <div class="tech-stat-group">
+            <div class="tech-stat-info">
+              <span class="tech-stat-label">UI/UX Futurista</span>
+              <span class="tech-stat-val">85%</span>
+            </div>
+            <div class="tech-stat-bar-bg"><div class="tech-stat-bar-fill" data-progress="85%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      gsap.set(".header",       { opacity: 0, y: -30 });
+      gsap.set(".page-content", { opacity: 0, y: 40  });
+      gsap.set(".glow-orb",     { opacity: 0, scale: 0.6 });
+
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.to(".glow-orb",     { opacity: 0.15, scale: 1, duration: 1.8, stagger: 0.3 })
+        .to(".header",       { opacity: 1, y: 0, duration: 1.0 }, "-=1.4")
+        .to(".page-content", { opacity: 1, y: 0, duration: 1.2 }, "-=0.8", {
+          onComplete: () => {
+            document.querySelectorAll(".tech-stat-bar-fill").forEach(fill => {
+              fill.style.width = fill.getAttribute("data-progress");
+            });
+          }
+        });
+
+      // Activar barras de progreso tras la entrada
+      tl.eventCallback("onComplete", () => {
+        document.querySelectorAll(".tech-stat-bar-fill").forEach(fill => {
+          fill.style.width = fill.getAttribute("data-progress");
+        });
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        const xP = (e.clientX / window.innerWidth  - 0.5) * 80;
+        const yP = (e.clientY / window.innerHeight - 0.5) * 80;
+        gsap.to("#orb-1", { x:  xP * 1.2, y:  yP * 1.2, duration: 2.5, ease: "power2.out" });
+        gsap.to("#orb-2", { x: -xP * 0.8, y: -yP * 0.8, duration: 3,   ease: "power2.out" });
+      });
+    });
+  </script>
+</body>
+</html>

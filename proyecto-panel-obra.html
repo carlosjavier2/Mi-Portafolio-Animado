@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel de Control de Obra en Tiempo Real - Plataforma de monitoreo digital de avance físico y financiero de proyectos de construcción.">
+  <title>Panel de Control de Obra | Portafolio Futurista</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="glow-orb glow-orb-1" id="orb-1"></div>
+  <div class="glow-orb glow-orb-2" id="orb-2"></div>
+
+  <header class="header" id="main-header">
+    <a href="index.html" class="logo">FUTURO<span>//</span></a>
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="index.html"     class="nav-link"        id="link-inicio">Inicio</a></li>
+        <li><a href="sobre-mi.html"  class="nav-link"        id="link-sobre-mi">Sobre mí</a></li>
+        <li><a href="proyectos.html" class="nav-link active"  id="link-proyectos">Proyectos</a></li>
+        <li><a href="contacto.html"  class="nav-link"        id="link-contacto">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-content" id="page-content">
+
+    <!-- Botón de retorno -->
+    <a href="proyectos.html" class="back-btn" id="btn-volver">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Volver a Proyectos
+    </a>
+
+    <!-- Hero de la página de detalle -->
+    <div class="project-detail-hero">
+      <div class="section-label">Proyecto 02 // Monitoreo en Tiempo Real</div>
+      <h1>Panel de Control de <span>Obra</span><br>en Tiempo Real</h1>
+    </div>
+
+    <!-- Imagen principal del proyecto -->
+    <img src="img/proyecto-dashboard.png"
+         alt="Interfaz del Panel de Control de Obra en Tiempo Real"
+         class="project-hero-img">
+
+    <!-- Grid: Descripción + Sidebar -->
+    <div class="project-detail-grid">
+
+      <!-- Columna principal -->
+      <div class="project-detail-body">
+        <p>
+          En la industria de la construcción, el <strong>control del avance físico y financiero de una obra</strong> suele realizarse con hojas de cálculo actualizadas manualmente, reuniones semanales y reportes en papel. Este proceso genera retrasos en la toma de decisiones y dificulta detectar desviaciones a tiempo.
+        </p>
+        <p>
+          Este proyecto es una plataforma web de monitoreo en tiempo real que <strong>digitaliza el control de obra</strong>. Integra un modelo 3D del edificio (digital twin) con los datos reales de avance, permitiendo al residente de obra y al cliente visualizar el estado actual del proyecto de forma inmediata y desde cualquier dispositivo.
+        </p>
+        <p>
+          La interfaz fue construida con <strong>Three.js para el modelo 3D</strong> y D3.js para los gráficos de desviación de cronograma y presupuesto. GSAP maneja todas las animaciones de transición de datos, generando una experiencia fluida incluso al actualizar métricas en tiempo real mediante WebSockets.
+        </p>
+
+        <h3 class="detail-subtitle">Características Técnicas</h3>
+        <ul class="feature-list">
+          <li>Modelo 3D interactivo del proyecto (digital twin BIM) renderizado directamente en el navegador con Three.js.</li>
+          <li>Actualización de datos en tiempo real mediante WebSockets: el dashboard refleja los cambios al instante.</li>
+          <li>Gráficas de curva S de avance físico vs. planificado, con alertas automáticas ante desviaciones.</li>
+          <li>Panel financiero con seguimiento de valorizaciones, facturas aprobadas y flujo de caja proyectado.</li>
+          <li>Sistema de geolocalización de frentes de trabajo con mapas satelitales integrados.</li>
+          <li>Generación automática de informes semanales de avance en formato PDF con una sola acción.</li>
+          <li>Compatibilidad con datos provenientes de drones (fotogrametría) para actualización del avance visual.</li>
+        </ul>
+
+        <h3 class="detail-subtitle">Impacto y Resultados</h3>
+        <p>
+          La plataforma redujo el tiempo de generación de informes de avance de <strong>2 días a 15 minutos</strong>, y permitió al equipo de gerencia detectar y corregir una desviación crítica de cronograma con 3 semanas de anticipación, evitando un retraso que habría costado penalidades contractuales significativas.
+        </p>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="tech-sidebar">
+        <div class="tech-sidebar-panel">
+          <p class="tech-sidebar-title">// Stack Tecnológico</p>
+          <ul class="tech-stack-list">
+            <li>Three.js (WebGL)</li>
+            <li>D3.js</li>
+            <li>WebSockets (Socket.io)</li>
+            <li>GSAP 3.x</li>
+            <li>Node.js / Express</li>
+            <li>PostgreSQL</li>
+            <li>Mapbox GL JS</li>
+          </ul>
+        </div>
+        <div class="tech-sidebar-panel">
+          <p class="tech-sidebar-title">// Metadatos</p>
+          <ul class="tech-stack-list">
+            <li>Duración: 6 meses</li>
+            <li>Rol: Desarrollador Full-Stack</li>
+            <li>Sector: Construcción / PropTech</li>
+            <li>Estado: Productivo</li>
+          </ul>
+        </div>
+        <a href="proyectos.html" class="cta-button" id="btn-back-cta" style="justify-content:center; width:100%; margin-top: 8px;">
+          ← Volver a Proyectos
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      gsap.set(".header",       { opacity: 0, y: -30 });
+      gsap.set(".glow-orb",     { opacity: 0, scale: 0.6 });
+      gsap.set(".back-btn",     { opacity: 0, x: -20 });
+      gsap.set(".project-detail-hero", { opacity: 0, y: 40 });
+      gsap.set(".project-hero-img",    { opacity: 0, scale: 0.97 });
+      gsap.set(".project-detail-grid", { opacity: 0, y: 40 });
+
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.to(".glow-orb",             { opacity: 0.15, scale: 1, duration: 1.8, stagger: 0.3 })
+        .to(".header",               { opacity: 1, y: 0, duration: 1.0 }, "-=1.4")
+        .to(".back-btn",             { opacity: 1, x: 0, duration: 0.8 }, "-=0.8")
+        .to(".project-detail-hero",  { opacity: 1, y: 0, duration: 1.0 }, "-=0.6")
+        .to(".project-hero-img",     { opacity: 1, scale: 1, duration: 1.1 }, "-=0.7")
+        .to(".project-detail-grid",  { opacity: 1, y: 0, duration: 1.2 }, "-=0.6");
+
+      document.addEventListener("mousemove", (e) => {
+        const xP = (e.clientX / window.innerWidth  - 0.5) * 80;
+        const yP = (e.clientY / window.innerHeight - 0.5) * 80;
+        gsap.to("#orb-1", { x:  xP * 1.2, y:  yP * 1.2, duration: 2.5, ease: "power2.out" });
+        gsap.to("#orb-2", { x: -xP * 0.8, y: -yP * 0.8, duration: 3,   ease: "power2.out" });
+      });
+    });
+  </script>
+</body>
+</html>

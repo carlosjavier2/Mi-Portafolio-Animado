@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de Automatización de Presupuestos - Proyecto de automatización de cálculos estructurales y metrados para ingeniería civil.">
+  <title>Sistema de Automatización de Presupuestos | Portafolio Futurista</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="glow-orb glow-orb-1" id="orb-1"></div>
+  <div class="glow-orb glow-orb-2" id="orb-2"></div>
+
+  <header class="header" id="main-header">
+    <a href="index.html" class="logo">FUTURO<span>//</span></a>
+    <nav>
+      <ul class="nav-menu">
+        <li><a href="index.html"     class="nav-link"        id="link-inicio">Inicio</a></li>
+        <li><a href="sobre-mi.html"  class="nav-link"        id="link-sobre-mi">Sobre mí</a></li>
+        <li><a href="proyectos.html" class="nav-link active"  id="link-proyectos">Proyectos</a></li>
+        <li><a href="contacto.html"  class="nav-link"        id="link-contacto">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-content" id="page-content">
+
+    <!-- Botón de retorno -->
+    <a href="proyectos.html" class="back-btn" id="btn-volver">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Volver a Proyectos
+    </a>
+
+    <!-- Hero de la página de detalle -->
+    <div class="project-detail-hero">
+      <div class="section-label">Proyecto 01 // Automatización</div>
+      <h1>Sistema de <span>Automatización</span><br>de Presupuestos</h1>
+    </div>
+
+    <!-- Imagen principal del proyecto -->
+    <img src="img/proyecto-presupuestos.png"
+         alt="Interfaz del Sistema de Automatización de Presupuestos"
+         class="project-hero-img">
+
+    <!-- Grid: Descripción + Sidebar -->
+    <div class="project-detail-grid">
+
+      <!-- Columna principal: descripción detallada -->
+      <div class="project-detail-body">
+        <p>
+          Este proyecto nació de una necesidad real vivida en obra: la elaboración de presupuestos de construcción es un proceso <strong>tedioso, propenso a errores y que consume semanas enteras</strong> de trabajo manual. Un error en el metrado de una partida puede traducirse en pérdidas de miles de dólares.
+        </p>
+        <p>
+          La solución fue una aplicación web interactiva que permite al ingeniero o arquitecto ingresar los parámetros básicos del proyecto (tipo de estructura, área de construcción, especificaciones de materiales) y obtener de forma instantánea un <strong>presupuesto detallado, trazable y exportable</strong> a Excel o PDF.
+        </p>
+        <p>
+          El motor de cálculo fue desarrollado en <strong>Python con la librería pandas</strong>, conectado a una base de datos SQLite que almacena precios unitarios actualizables. El frontend interactivo fue construido en HTML/CSS con animaciones de datos en GSAP para visualizar en tiempo real cómo cambian los costos al modificar los parámetros.
+        </p>
+
+        <h3 class="detail-subtitle">Características Técnicas</h3>
+        <ul class="feature-list">
+          <li>Extracción y procesamiento automático de metrados desde plantillas estandarizadas.</li>
+          <li>Motor de cálculo estructural con fórmulas de la norma técnica de construcción local.</li>
+          <li>Base de datos de precios unitarios sincronizable con el mercado local de materiales.</li>
+          <li>Generación de reportes en PDF y Excel con un solo clic, listos para presentar al cliente.</li>
+          <li>Visualización interactiva de la distribución de costos mediante gráficos animados.</li>
+          <li>Sistema de control de versiones del presupuesto para rastrear cambios entre iteraciones.</li>
+          <li>Interfaz de usuario 100% responsiva y en modo oscuro, optimizada para uso en obra desde tablets.</li>
+        </ul>
+
+        <h3 class="detail-subtitle">Impacto y Resultados</h3>
+        <p>
+          La herramienta logró reducir el tiempo de elaboración de presupuestos de <strong>5-7 días laborales a menos de 2 horas</strong>, eliminando prácticamente los errores de transcripción y aumentando la confianza de los clientes en la transparencia del proceso.
+        </p>
+      </div>
+
+      <!-- Sidebar: tecnologías y metadatos -->
+      <div class="tech-sidebar">
+        <div class="tech-sidebar-panel">
+          <p class="tech-sidebar-title">// Stack Tecnológico</p>
+          <ul class="tech-stack-list">
+            <li>Python 3.11</li>
+            <li>pandas &amp; openpyxl</li>
+            <li>SQLite / SQLAlchemy</li>
+            <li>HTML5 / CSS3</li>
+            <li>GSAP 3.x</li>
+            <li>ReportLab (PDF)</li>
+            <li>Chart.js</li>
+          </ul>
+        </div>
+        <div class="tech-sidebar-panel">
+          <p class="tech-sidebar-title">// Metadatos</p>
+          <ul class="tech-stack-list">
+            <li>Duración: 4 meses</li>
+            <li>Rol: Desarrollador Full-Stack</li>
+            <li>Sector: Ingeniería Civil</li>
+            <li>Estado: Productivo</li>
+          </ul>
+        </div>
+        <a href="proyectos.html" class="cta-button" id="btn-back-cta" style="justify-content:center; width:100%; margin-top: 8px;">
+          ← Volver a Proyectos
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      gsap.set(".header",       { opacity: 0, y: -30 });
+      gsap.set(".glow-orb",     { opacity: 0, scale: 0.6 });
+      gsap.set(".back-btn",     { opacity: 0, x: -20 });
+      gsap.set(".project-detail-hero", { opacity: 0, y: 40 });
+      gsap.set(".project-hero-img",    { opacity: 0, scale: 0.97 });
+      gsap.set(".project-detail-grid", { opacity: 0, y: 40 });
+
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.to(".glow-orb",             { opacity: 0.15, scale: 1, duration: 1.8, stagger: 0.3 })
+        .to(".header",               { opacity: 1, y: 0, duration: 1.0 }, "-=1.4")
+        .to(".back-btn",             { opacity: 1, x: 0, duration: 0.8 }, "-=0.8")
+        .to(".project-detail-hero",  { opacity: 1, y: 0, duration: 1.0 }, "-=0.6")
+        .to(".project-hero-img",     { opacity: 1, scale: 1, duration: 1.1 }, "-=0.7")
+        .to(".project-detail-grid",  { opacity: 1, y: 0, duration: 1.2 }, "-=0.6");
+
+      document.addEventListener("mousemove", (e) => {
+        const xP = (e.clientX / window.innerWidth  - 0.5) * 80;
+        const yP = (e.clientY / window.innerHeight - 0.5) * 80;
+        gsap.to("#orb-1", { x:  xP * 1.2, y:  yP * 1.2, duration: 2.5, ease: "power2.out" });
+        gsap.to("#orb-2", { x: -xP * 0.8, y: -yP * 0.8, duration: 3,   ease: "power2.out" });
+      });
+    });
+  </script>
+</body>
+</html>
