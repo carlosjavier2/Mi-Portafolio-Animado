@@ -906,6 +906,78 @@ textarea.form-input {
 }
 
 /* ==========================================================================
+   FOOTER
+   ========================================================================== */
+.footer {
+  position: relative;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--glass-border);
+  padding: 40px var(--container-padding);
+  margin-top: auto;
+  z-index: 10;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-gradient);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(0, 242, 254, 0.04);
+  border: 1px solid rgba(0, 242, 254, 0.15);
+  border-radius: 4px;
+  color: var(--accent-cyan);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+
+.footer-link:hover {
+  background: var(--accent-gradient);
+  color: var(--bg-dark);
+  border-color: transparent;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+}
+
+.footer-link svg {
+  stroke: var(--accent-cyan);
+  transition: all var(--transition-fast);
+}
+
+.footer-link:hover svg {
+  stroke: var(--bg-dark);
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 @media (max-width: 992px) {
@@ -1098,5 +1170,21 @@ textarea.form-input {
   .back-btn {
     font-size: 0.82rem;
     margin-bottom: 32px;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────────────────── */
+  .footer {
+    padding: 30px 5%;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .footer-text {
+    font-size: 0.8rem;
+    line-height: 1.5;
   }
 }
