@@ -1,29 +1,60 @@
 /**
  * ==========================================================================
- * RASTREADOR DE VISITAS AUTOMÁTICO (MÓDULO ES6)
+ * RASTREADOR DE VISITAS UNICIDAD Y SESIONES (MÓDULO ES6)
  * ==========================================================================
- * Este script se ejecuta en cada página del portafolio. Registra la visita,
- * incrementando los contadores globales y guardando un log detallado.
+ * Este script identifica a cada visitante de forma única mediante un ID persistente
+ * en localStorage. Registra las analíticas en la colección 'users_analytics'
+ * de Cloud Firestore, manejando de forma inteligente la distinción entre
+ * una nueva sesión (pestaña nueva / primera carga) y la navegación entre páginas.
  */
 
 import { db, isConfigured } from "./firebase-config.js";
-import { doc, setDoc, updateDoc, increment, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, setDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Obtener el identificador legible de la página actual
-function getPageKey() {
-  const path = window.location.pathname;
-  const page = path.substring(path.lastIndexOf("/") + 1);
-  
-  if (page === "" || page === "index.html") return "inicio";
-  if (page === "sobre-mi.html") return "sobre_mi";
-  if (page === "proyectos.html") return "proyectos";
-  if (page === "contacto.html") return "contacto";
-  
-  // Para páginas de detalle de proyectos u otras
-  return page.replace(".html", "").replace(/-/g, "_");
+// ==========================================================================
+// DETECCIÓN DE USUARIO ÚNICO Y CONTROL DE SESIÓN
+// ==========================================================================
+
+const UID_STORAGE_KEY = "carlos_portfolio_uid";
+const SESSION_STORAGE_KEY = "carlos_portfolio_session_active";
+
+/**
+ * Obtiene el ID único del usuario desde localStorage o genera uno nuevo.
+ * @returns {Object} { uid: string, isNewUser: boolean }
+ */
+function getOrCreateUserId() {
+  let uid = localStorage.getItem(UID_STORAGE_KEY);
+  let isNewUser = false;
+
+  if (!uid) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    // Generar un sufijo aleatorio de 4 dígitos para robustez extra contra colisiones
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    uid = `usr_${timestamp}${randomSuffix}`;
+    localStorage.setItem(UID_STORAGE_KEY, uid);
+    isNewUser = true;
+  }
+
+  return { uid, isNewUser };
 }
 
-// Detectar categoría del dispositivo del usuario
+/**
+ * Controla si esta carga de página corresponde a una nueva sesión de navegación.
+ * @returns {boolean} true si es una nueva sesión en este navegador/pestaña
+ */
+function checkIsNewSession() {
+  const sessionActive = sessionStorage.getItem(SESSION_STORAGE_KEY);
+  if (!sessionActive) {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, "true");
+    return true; // Es el primer hit de esta sesión en la pestaña
+  }
+  return false; // El usuario ya está navegando dentro del sitio en esta pestaña
+}
+
+// ==========================================================================
+// ANÁLISIS DE DISPOSITIVO Y ENTORNO
+// ==========================================================================
+
 function getDeviceType() {
   const ua = navigator.userAgent;
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
@@ -35,7 +66,6 @@ function getDeviceType() {
   return "Escritorio";
 }
 
-// Obtener detalles simplificados del navegador/SO
 function getBrowserDetails() {
   const ua = navigator.userAgent;
   let os = "Desconocido";
@@ -54,94 +84,93 @@ function getBrowserDetails() {
   return `${getDeviceType()} (${os} - ${browser})`;
 }
 
-// Función principal para registrar la visita
-async function trackVisit() {
-  const pageKey = getPageKey();
+// ==========================================================================
+// FUNCIÓN PRINCIPAL DE RASTREO
+// ==========================================================================
+
+async function trackUserAnalytics() {
+  const { uid, isNewUser } = getOrCreateUserId();
+  const isNewSession = checkIsNewSession();
   const device = getBrowserDetails();
-  const referrer = document.referrer ? new URL(document.referrer).hostname : "Directo";
   const timestamp = new Date().toISOString();
 
-  console.log(`🤖 Registrando visita en página: [${pageKey}]`);
+  console.log(`🤖 [UID: ${uid}] | Nuevo Usuario: ${isNewUser} | Nueva Sesión: ${isNewSession}`);
 
   if (isConfigured) {
     try {
-      // 1. Incrementar contadores globales en Firestore
-      const counterRef = doc(db, "metrics", "global_counters");
-      
-      // Intentamos actualizar, si no existe el documento, lo creamos
-      try {
-        await updateDoc(counterRef, {
-          total_views: increment(1),
-          [`page_${pageKey}`]: increment(1)
+      const userDocRef = doc(db, "users_analytics", uid);
+
+      if (isNewUser) {
+        // REGISTRO DE NUEVO USUARIO
+        // Se crea el documento con la sesión inicial y timestamps coincidentes
+        await setDoc(userDocRef, {
+          first_visit: serverTimestamp(),
+          last_visit: serverTimestamp(),
+          device: device,
+          total_sessions: 1
         });
-      } catch (err) {
-        // Si falla porque no existe, inicializamos el documento
-        await setDoc(counterRef, {
-          total_views: 1,
-          page_inicio: pageKey === "inicio" ? 1 : 0,
-          page_sobre_mi: pageKey === "sobre_mi" ? 1 : 0,
-          page_proyectos: pageKey === "proyectos" ? 1 : 0,
-          page_contacto: pageKey === "contacto" ? 1 : 0
-        }, { merge: true });
+        console.log(`⚡ Firestore: Creado perfil único de usuario [${uid}].`);
+      } else {
+        // USUARIO EXISTENTE DE RETORNO
+        if (isNewSession) {
+          // Si el usuario ya existe y abre una nueva sesión (ej: nueva pestaña o vuelve más tarde)
+          // Incrementamos total_sessions y actualizamos la última visita
+          await updateDoc(userDocRef, {
+            last_visit: serverTimestamp(),
+            total_sessions: increment(1)
+          });
+          console.log(`⚡ Firestore: Sesión incrementada (+1) para el usuario [${uid}].`);
+        } else {
+          // Si es solo navegación interna dentro de la misma sesión activa
+          // Únicamente actualizamos la marca de la última página vista sin inflar las sesiones
+          await updateDoc(userDocRef, {
+            last_visit: serverTimestamp()
+          });
+          console.log(`⚡ Firestore: Actualizada marca de actividad last_visit para [${uid}].`);
+        }
       }
-
-      // 2. Registrar el log de visitas individual
-      await addDoc(collection(db, "visits_log"), {
-        page: pageKey,
-        device: device,
-        referrer: referrer,
-        timestamp: serverTimestamp()
-      });
-
-      console.log("⚡ Visita registrada en la nube.");
     } catch (error) {
-      console.error("❌ Error al guardar datos en Firebase:", error);
+      console.error("❌ Error al persistir datos en Firebase Firestore:", error);
     }
   } else {
-    // Modo Simulación Local usando localStorage si Firebase no está activo
-    simulateLocalVisit(pageKey, device, referrer, timestamp);
+    // Fallback de Simulación Local
+    simulateLocalUserAnalytics(uid, isNewUser, isNewSession, device, timestamp);
   }
 }
 
-// Simulación de visitas locales con localStorage
-function simulateLocalVisit(pageKey, device, referrer, timestamp) {
-  // Obtener o inicializar métricas globales
-  let localMetrics = JSON.parse(localStorage.getItem("admin_local_metrics")) || {
-    total_views: 0,
-    page_inicio: 0,
-    page_sobre_mi: 0,
-    page_proyectos: 0,
-    page_contacto: 0
-  };
+// ==========================================================================
+// SIMULACIÓN DE MÉTRICAS LOCALES (MODO DEMO)
+// ==========================================================================
 
-  localMetrics.total_views += 1;
-  const key = `page_${pageKey}`;
-  if (localMetrics[key] !== undefined) {
-    localMetrics[key] += 1;
+function simulateLocalUserAnalytics(uid, isNewUser, isNewSession, device, timestamp) {
+  let localUsers = JSON.parse(localStorage.getItem("admin_local_users_analytics")) || {};
+
+  if (isNewUser || !localUsers[uid]) {
+    // Crear entrada de simulación nueva
+    localUsers[uid] = {
+      first_visit: timestamp,
+      last_visit: timestamp,
+      device: device,
+      total_sessions: 1
+    };
+    console.log(`📝 [Modo Demo] Perfil local creado para [${uid}].`);
   } else {
-    localMetrics[key] = 1;
+    // Actualizar usuario de retorno local
+    localUsers[uid].last_visit = timestamp;
+    if (isNewSession) {
+      localUsers[uid].total_sessions += 1;
+      console.log(`📝 [Modo Demo] Incrementada sesión (+1) local para [${uid}].`);
+    } else {
+      console.log(`📝 [Modo Demo] Actualizado last_visit local para [${uid}].`);
+    }
   }
-  localStorage.setItem("admin_local_metrics", JSON.stringify(localMetrics));
 
-  // Obtener o inicializar log de visitas
-  let localLogs = JSON.parse(localStorage.getItem("admin_local_logs")) || [];
-  localLogs.unshift({
-    page: pageKey,
-    device: device,
-    referrer: referrer,
-    timestamp: timestamp
-  });
-
-  // Limitar a los últimos 50 logs para rendimiento
-  if (localLogs.length > 50) localLogs.pop();
-  localStorage.setItem("admin_local_logs", JSON.stringify(localLogs));
-
-  console.log("📝 [Modo Demo] Visita registrada en almacenamiento local de prueba.");
+  localStorage.setItem("admin_local_users_analytics", JSON.stringify(localUsers));
 }
 
-// Iniciar rastreo cuando el documento esté cargado
+// Inicializar cuando la carga del documento comience
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", trackVisit);
+  document.addEventListener("DOMContentLoaded", trackUserAnalytics);
 } else {
-  trackVisit();
+  trackUserAnalytics();
 }

@@ -3,12 +3,13 @@
  * PANEL DE ANALÍTICAS ADMINISTRATIVO (MÓDULO ES6 + GSAP)
  * ==========================================================================
  * Lógica del panel secreto. Detecta el disparador secreto, inyecta la
- * interfaz glassmorphic, consulta los datos de Firebase (o simulados)
+ * interfaz glassmorphic, consulta los datos de Firestore (o simulados)
  * y ejecuta micro-animaciones premium ultra fluidas usando GSAP.
+ * Adaptado para el sistema de usuarios únicos y sesiones.
  */
 
 import { db, isConfigured } from "./firebase-config.js";
-import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================================================
 // CONFIGURACIÓN Y ESTADO
@@ -90,7 +91,7 @@ function injectAdminPanelDOM() {
       <div class="admin-panel-header">
         <div class="admin-header-title">
           <span class="pulse-dot"></span>
-          SECURITY PROTOCOL // VISITOR ANALYTICS
+          SECURITY PROTOCOL // UNIQUE USER METRICS
         </div>
         <button class="admin-close-btn" id="admin-close-btn" aria-label="Cerrar Panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -101,55 +102,55 @@ function injectAdminPanelDOM() {
       </div>
 
       <div class="admin-panel-content">
-        <!-- Tarjeta Principal: Total de Visitas -->
+        <!-- Tarjeta Principal: Total de Usuarios Únicos -->
         <div class="admin-metric-card total-card">
-          <div class="card-label">TOTAL VISITS // OVERALL</div>
+          <div class="card-label">TOTAL UNIQUE USERS // OVERALL</div>
           <div class="card-value" id="admin-stat-total">0000</div>
-          <div class="card-footer">SYSTEM ONLINE & TRACKING</div>
+          <div class="card-footer" id="admin-total-sessions-footer">TOTAL SESSIONS LOGGED: 0</div>
         </div>
 
         <!-- Secciones Secundarias: Columnas de Estadísticas y Logs -->
         <div class="admin-grid">
-          <!-- Columna Izquierda: Estadísticas de Páginas -->
+          <!-- Columna Izquierda: Estadísticas de Dispositivos -->
           <div class="admin-section-box">
-            <h3 class="box-title">PAGE PENETRATION // METRICS</h3>
+            <h3 class="box-title">DEVICE PENETRATION // METRICS</h3>
             
             <div class="page-stat-item">
               <div class="page-info-row">
-                <span class="page-name">INICIO (/)</span>
-                <span class="page-count-val" id="count-inicio">0</span>
+                <span class="page-name">🖥️ ESCRITORIO</span>
+                <span class="page-count-val" id="count-escritorio">0</span>
               </div>
-              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-inicio"></div></div>
+              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-escritorio"></div></div>
             </div>
 
             <div class="page-stat-item">
               <div class="page-info-row">
-                <span class="page-name">SOBRE MÍ (/sobre-mi)</span>
-                <span class="page-count-val" id="count-sobre-mi">0</span>
+                <span class="page-name">📱 MÓVIL</span>
+                <span class="page-count-val" id="count-movil">0</span>
               </div>
-              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-sobre-mi"></div></div>
+              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-movil"></div></div>
             </div>
 
             <div class="page-stat-item">
               <div class="page-info-row">
-                <span class="page-name">PROYECTOS (/proyectos)</span>
-                <span class="page-count-val" id="count-proyectos">0</span>
+                <span class="page-name">📟 TABLET</span>
+                <span class="page-count-val" id="count-tablet">0</span>
               </div>
-              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-proyectos"></div></div>
+              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-tablet"></div></div>
             </div>
 
             <div class="page-stat-item">
               <div class="page-info-row">
-                <span class="page-name">CONTACTO (/contacto)</span>
-                <span class="page-count-val" id="count-contacto">0</span>
+                <span class="page-name">❓ OTROS / DESCONOCIDO</span>
+                <span class="page-count-val" id="count-otros">0</span>
               </div>
-              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-contacto"></div></div>
+              <div class="page-bar-bg"><div class="page-bar-fill" id="bar-otros"></div></div>
             </div>
           </div>
 
-          <!-- Columna Derecha: Registro de Visitas Recientes (Feed) -->
+          <!-- Columna Derecha: Registro de Actividad de Usuarios Únicos -->
           <div class="admin-section-box">
-            <h3 class="box-title">LIVE FEED // LAST VISITS</h3>
+            <h3 class="box-title">LIVE FEED // RECENT ACTIVE USERS</h3>
             <div class="logs-feed-container" id="admin-logs-feed">
               <div class="log-entry loading">Esperando conexión de datos...</div>
             </div>
@@ -185,46 +186,83 @@ function injectAdminPanelDOM() {
 // ==========================================================================
 async function fetchAnalyticsData() {
   let stats = {
-    total_views: 0,
-    page_inicio: 0,
-    page_sobre_mi: 0,
-    page_proyectos: 0,
-    page_contacto: 0
+    total_unique_users: 0,
+    total_sessions: 0,
+    device_escritorio: 0,
+    device_movil: 0,
+    device_tablet: 0,
+    device_otros: 0
   };
   
   let visitsLog = [];
 
   if (isConfigured) {
     try {
-      // 1. Obtener contadores globales
-      const counterRef = doc(db, "metrics", "global_counters");
-      const snap = await getDoc(counterRef);
-      if (snap.exists()) {
-        stats = snap.data();
-      }
+      // Obtener todos los documentos de users_analytics
+      const allSnap = await getDocs(collection(db, "users_analytics"));
+      stats.total_unique_users = allSnap.size;
 
-      // 2. Obtener las últimas 10 visitas de la bitácora
-      const logColRef = collection(db, "visits_log");
-      const q = query(logColRef, orderBy("timestamp", "desc"), limit(10));
-      const logSnap = await getDocs(q);
-      
-      logSnap.forEach((doc) => {
+      const docs = [];
+      allSnap.forEach((doc) => {
         const item = doc.data();
-        visitsLog.push({
-          page: item.page,
-          device: item.device,
-          referrer: item.referrer,
-          timestamp: item.timestamp?.toDate ? item.timestamp.toDate().toISOString() : new Date().toISOString()
+        const lastVisitTime = item.last_visit?.toDate ? item.last_visit.toDate() : new Date(item.last_visit || Date.now());
+        docs.push({
+          id: doc.id,
+          ...item,
+          lastVisitTime
         });
+
+        // Sumar sesiones
+        stats.total_sessions += (item.total_sessions || 0);
+
+        // Clasificar dispositivo
+        const devStr = (item.device || "").toLowerCase();
+        if (devStr.includes("escritorio")) stats.device_escritorio++;
+        else if (devStr.includes("móvil") || devStr.includes("movil") || devStr.includes("phone")) stats.device_movil++;
+        else if (devStr.includes("tablet") || devStr.includes("ipad")) stats.device_tablet++;
+        else stats.device_otros++;
       });
+
+      // Ordenar por last_visit descendente para la bitácora
+      docs.sort((a, b) => b.lastVisitTime - a.lastVisitTime);
+      visitsLog = docs.slice(0, 10).map((d) => ({
+        uid: d.id,
+        device: d.device,
+        total_sessions: d.total_sessions,
+        timestamp: d.lastVisitTime.toISOString()
+      }));
+
     } catch (error) {
-      console.error("❌ Error al obtener datos de Firebase:", error);
+      console.error("❌ Error al obtener datos de Firebase Firestore:", error);
     }
   } else {
-    // Recuperar simulación de localStorage
-    stats = JSON.parse(localStorage.getItem("admin_local_metrics")) || stats;
-    visitsLog = JSON.parse(localStorage.getItem("admin_local_logs")) || [];
-    visitsLog = visitsLog.slice(0, 10);
+    // Modo Simulación Local: Recuperar de localStorage
+    const localUsers = JSON.parse(localStorage.getItem("admin_local_users_analytics")) || {};
+    const docs = Object.keys(localUsers).map(uid => ({
+      id: uid,
+      ...localUsers[uid],
+      lastVisitTime: new Date(localUsers[uid].last_visit)
+    }));
+
+    stats.total_unique_users = docs.length;
+
+    docs.forEach(d => {
+      stats.total_sessions += (d.total_sessions || 0);
+      const devStr = (d.device || "").toLowerCase();
+      if (devStr.includes("escritorio")) stats.device_escritorio++;
+      else if (devStr.includes("móvil") || devStr.includes("movil") || devStr.includes("phone")) stats.device_movil++;
+      else if (devStr.includes("tablet") || devStr.includes("ipad")) stats.device_tablet++;
+      else stats.device_otros++;
+    });
+
+    // Ordenar y tomar los últimos 10 logs
+    docs.sort((a, b) => b.lastVisitTime - a.lastVisitTime);
+    visitsLog = docs.slice(0, 10).map(d => ({
+      uid: d.id,
+      device: d.device,
+      total_sessions: d.total_sessions,
+      timestamp: d.lastVisitTime.toISOString()
+    }));
   }
 
   return { stats, visitsLog };
@@ -251,25 +289,31 @@ function populateUI(data) {
   const { stats, visitsLog } = data;
 
   // Iniciar animación de números incrementales con GSAP
-  animateCounter("admin-stat-total", stats.total_views || 0);
-  animateCounter("count-inicio", stats.page_inicio || 0);
-  animateCounter("count-sobre-mi", stats.page_sobre_mi || 0);
-  animateCounter("count-proyectos", stats.page_proyectos || 0);
-  animateCounter("count-contacto", stats.page_contacto || 0);
+  animateCounter("admin-stat-total", stats.total_unique_users || 0);
+  animateCounter("count-escritorio", stats.device_escritorio || 0);
+  animateCounter("count-movil", stats.device_movil || 0);
+  animateCounter("count-tablet", stats.device_tablet || 0);
+  animateCounter("count-otros", stats.device_otros || 0);
 
-  // Calcular y animar las barras de porcentaje
-  const total = stats.total_views || 1; // Evitar división por cero
-  animateProgressBar("bar-inicio", ((stats.page_inicio || 0) / total) * 100);
-  animateProgressBar("bar-sobre-mi", ((stats.page_sobre_mi || 0) / total) * 100);
-  animateProgressBar("bar-proyectos", ((stats.page_proyectos || 0) / total) * 100);
-  animateProgressBar("bar-contacto", ((stats.page_contacto || 0) / total) * 100);
+  // Actualizar pie de tarjeta principal de sesiones totales
+  const sessionFooter = document.getElementById("admin-total-sessions-footer");
+  if (sessionFooter) {
+    sessionFooter.innerText = `TOTAL SESSIONS LOGGED: ${stats.total_sessions}`;
+  }
 
-  // Renderizar log de visitas
+  // Calcular y animar las barras de porcentaje de penetración por dispositivos
+  const total = stats.total_unique_users || 1; // Evitar división por cero
+  animateProgressBar("bar-escritorio", ((stats.device_escritorio || 0) / total) * 100);
+  animateProgressBar("bar-movil", ((stats.device_movil || 0) / total) * 100);
+  animateProgressBar("bar-tablet", ((stats.device_tablet || 0) / total) * 100);
+  animateProgressBar("bar-otros", ((stats.device_otros || 0) / total) * 100);
+
+  // Renderizar log de visitas (Feed de Usuarios Únicos)
   const logFeedContainer = document.getElementById("admin-logs-feed");
   logFeedContainer.innerHTML = "";
 
   if (visitsLog.length === 0) {
-    logFeedContainer.innerHTML = `<div class="log-entry empty">Ninguna visita registrada aún en la base de datos.</div>`;
+    logFeedContainer.innerHTML = `<div class="log-entry empty">Ningún usuario registrado aún en la base de datos.</div>`;
     return;
   }
 
@@ -277,24 +321,32 @@ function populateUI(data) {
     const entry = document.createElement("div");
     entry.className = "log-entry";
     
-    // Definir iconos o colores para las páginas
-    let badgeClass = "badge-other";
-    if (log.page === "inicio") badgeClass = "badge-inicio";
-    else if (log.page === "sobre_mi") badgeClass = "badge-sobre-mi";
-    else if (log.page === "proyectos") badgeClass = "badge-proyectos";
-    else if (log.page === "contacto") badgeClass = "badge-contacto";
+    // Variar estéticamente el color del Badge según el conteo de sesiones del usuario
+    let badgeClass = "badge-inicio"; // Cyan por defecto
+    let badgeLabel = `${log.total_sessions} SESIÓN`;
+
+    if (log.total_sessions === 1) {
+      badgeClass = "badge-contacto"; // Verde neón para nuevo lead
+      badgeLabel = "NUEVO LEADER";
+    } else if (log.total_sessions > 5) {
+      badgeClass = "badge-proyectos"; // Dorado para usuario recurrente
+      badgeLabel = `${log.total_sessions} SESIONES (VIP)`;
+    } else if (log.total_sessions > 1) {
+      badgeClass = "badge-sobre-mi"; // Morado para usuario en retorno
+      badgeLabel = `${log.total_sessions} SESIONES`;
+    }
 
     const relativeTime = getRelativeTimeString(log.timestamp);
-    const pageName = log.page.toUpperCase().replace("_", " ");
+    const userIdDisplay = log.uid.toUpperCase();
 
     entry.innerHTML = `
       <div class="log-header-row">
-        <span class="log-badge ${badgeClass}">${pageName}</span>
+        <span class="log-badge ${badgeClass}">${badgeLabel}</span>
         <span class="log-time">${relativeTime}</span>
       </div>
       <div class="log-details">
+        <span class="log-device" style="color: var(--text-primary); font-weight: 500; margin-bottom: 2px;">👤 ID: ${userIdDisplay}</span>
         <span class="log-device" title="${log.device}">🖥️ ${log.device}</span>
-        <span class="log-ref">🔗 ${log.referrer}</span>
       </div>
     `;
     logFeedContainer.appendChild(entry);
