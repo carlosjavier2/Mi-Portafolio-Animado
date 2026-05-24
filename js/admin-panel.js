@@ -3,9 +3,9 @@
  * PANEL DE ANALÍTICAS ADMINISTRATIVO (MÓDULO ES6 + GSAP)
  * ==========================================================================
  * Lógica del panel secreto. Detecta el disparador secreto, inyecta la
- * interfaz glassmorphic, consulta los datos de Firestore (o simulados)
+ * interfaz glassmorphic, consulta los datos de Firebase (o simulados)
  * y ejecuta micro-animaciones premium ultra fluidas usando GSAP.
- * Adaptado para el sistema de usuarios únicos y sesiones.
+ * Adaptado para el sistema de usuarios únicos, sesiones e historial de páginas.
  */
 
 import { db, isConfigured } from "./firebase-config.js";
@@ -229,6 +229,7 @@ async function fetchAnalyticsData() {
         uid: d.id,
         device: d.device,
         total_sessions: d.total_sessions,
+        paginas_vistas: d.paginas_vistas || {},
         timestamp: d.lastVisitTime.toISOString()
       }));
 
@@ -261,6 +262,7 @@ async function fetchAnalyticsData() {
       uid: d.id,
       device: d.device,
       total_sessions: d.total_sessions,
+      paginas_vistas: d.paginas_vistas || {},
       timestamp: d.lastVisitTime.toISOString()
     }));
   }
@@ -339,14 +341,19 @@ function populateUI(data) {
     const relativeTime = getRelativeTimeString(log.timestamp);
     const userIdDisplay = log.uid.toUpperCase();
 
+    // Formatear el mapa de navegación de páginas vistas
+    const pages = log.paginas_vistas || {};
+    const viewsStr = `📖 Vistas: Inicio (${pages.inicio || 0}) | Sobre Mí (${pages.sobre_mi || 0}) | Proy (${pages.proyectos || 0}) | Cont (${pages.contacto || 0})`;
+
     entry.innerHTML = `
       <div class="log-header-row">
         <span class="log-badge ${badgeClass}">${badgeLabel}</span>
         <span class="log-time">${relativeTime}</span>
       </div>
       <div class="log-details">
-        <span class="log-device" style="color: var(--text-primary); font-weight: 500; margin-bottom: 2px;">👤 ID: ${userIdDisplay}</span>
+        <span class="log-device" style="color: var(--text-primary); font-weight: 600; margin-bottom: 2px;">👤 ID: ${userIdDisplay}</span>
         <span class="log-device" title="${log.device}">🖥️ ${log.device}</span>
+        <span class="log-device" style="color: var(--accent-cyan); font-size: 0.72rem; margin-top: 4px; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${viewsStr}</span>
       </div>
     `;
     logFeedContainer.appendChild(entry);

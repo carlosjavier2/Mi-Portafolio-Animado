@@ -5,7 +5,8 @@
  * Este script identifica a cada visitante de forma única mediante un ID persistente
  * en localStorage. Registra las analíticas en la colección 'users_analytics'
  * de Cloud Firestore, manejando de forma inteligente la distinción entre
- * una nueva sesión (pestaña nueva / primera carga) y la navegación entre páginas.
+ * una nueva sesión y la navegación, y guardando el historial de páginas vistas
+ * de forma individual en un mapa 'paginas_vistas'.
  */
 
 import { db, isConfigured } from "./firebase-config.js";
@@ -52,8 +53,25 @@ function checkIsNewSession() {
 }
 
 // ==========================================================================
-// ANÁLISIS DE DISPOSITIVO Y ENTORNO
+// ANÁLISIS DE DISPOSITIVO, ENTORNO Y SECCIÓN ACTUAL
 // ==========================================================================
+
+/**
+ * Obtiene la clave de sección a partir de la URL actual.
+ * @returns {string} Clave de la página (ej: 'inicio', 'sobre_mi', 'proyectos')
+ */
+function getPageKey() {
+  const path = window.location.pathname;
+  const page = path.substring(path.lastIndexOf("/") + 1);
+  
+  if (page === "" || page === "index.html") return "inicio";
+  if (page === "sobre-mi.html") return "sobre_mi";
+  if (page === "proyectos.html") return "proyectos";
+  if (page === "contacto.html") return "contacto";
+  
+  // Para páginas de detalle de proyectos u otras
+  return page.replace(".html", "").replace(/-/g, "_");
+}
 
 function getDeviceType() {
   const ua = navigator.userAgent;
@@ -91,10 +109,11 @@ function getBrowserDetails() {
 async function trackUserAnalytics() {
   const { uid, isNewUser } = getOrCreateUserId();
   const isNewSession = checkIsNewSession();
+  const pageKey = getPageKey();
   const device = getBrowserDetails();
   const timestamp = new Date().toISOString();
 
-  console.log(`🤖 [UID: ${uid}] | Nuevo Usuario: ${isNewUser} | Nueva Sesión: ${isNewSession}`);
+  console.log(`🤖 [UID: ${uid}] | Nueva pág: [${pageKey}] | Nuevo Usr: ${isNewUser} | Nueva Sesión: ${isNewSession}`);
 
   if (isConfigured) {
     try {
@@ -102,31 +121,34 @@ async function trackUserAnalytics() {
 
       if (isNewUser) {
         // REGISTRO DE NUEVO USUARIO
-        // Se crea el documento con la sesión inicial y timestamps coincidentes
+        // Se crea el documento inicializando la sección actual en 'paginas_vistas'
         await setDoc(userDocRef, {
           first_visit: serverTimestamp(),
           last_visit: serverTimestamp(),
           device: device,
-          total_sessions: 1
+          total_sessions: 1,
+          paginas_vistas: {
+            [pageKey]: 1
+          }
         });
-        console.log(`⚡ Firestore: Creado perfil único de usuario [${uid}].`);
+        console.log(`⚡ Firestore: Creado perfil único [${uid}] con vista inicial a [${pageKey}].`);
       } else {
         // USUARIO EXISTENTE DE RETORNO
         if (isNewSession) {
-          // Si el usuario ya existe y abre una nueva sesión (ej: nueva pestaña o vuelve más tarde)
-          // Incrementamos total_sessions y actualizamos la última visita
+          // Incrementa sesiones y suma +1 en la página visitada
           await updateDoc(userDocRef, {
             last_visit: serverTimestamp(),
-            total_sessions: increment(1)
+            total_sessions: increment(1),
+            [`paginas_vistas.${pageKey}`]: increment(1)
           });
-          console.log(`⚡ Firestore: Sesión incrementada (+1) para el usuario [${uid}].`);
+          console.log(`⚡ Firestore: Sesión (+1) y pág [${pageKey}] (+1) para el usuario [${uid}].`);
         } else {
-          // Si es solo navegación interna dentro de la misma sesión activa
-          // Únicamente actualizamos la marca de la última página vista sin inflar las sesiones
+          // Navegación en la misma sesión: Solo suma +1 a la página y actualiza last_visit
           await updateDoc(userDocRef, {
-            last_visit: serverTimestamp()
+            last_visit: serverTimestamp(),
+            [`paginas_vistas.${pageKey}`]: increment(1)
           });
-          console.log(`⚡ Firestore: Actualizada marca de actividad last_visit para [${uid}].`);
+          console.log(`⚡ Firestore: Actividad interna. Pág [${pageKey}] (+1) para el usuario [${uid}].`);
         }
       }
     } catch (error) {
@@ -134,7 +156,7 @@ async function trackUserAnalytics() {
     }
   } else {
     // Fallback de Simulación Local
-    simulateLocalUserAnalytics(uid, isNewUser, isNewSession, device, timestamp);
+    simulateLocalUserAnalytics(uid, isNewUser, isNewSession, pageKey, device, timestamp);
   }
 }
 
@@ -142,26 +164,37 @@ async function trackUserAnalytics() {
 // SIMULACIÓN DE MÉTRICAS LOCALES (MODO DEMO)
 // ==========================================================================
 
-function simulateLocalUserAnalytics(uid, isNewUser, isNewSession, device, timestamp) {
+function simulateLocalUserAnalytics(uid, isNewUser, isNewSession, pageKey, device, timestamp) {
   let localUsers = JSON.parse(localStorage.getItem("admin_local_users_analytics")) || {};
 
   if (isNewUser || !localUsers[uid]) {
-    // Crear entrada de simulación nueva
+    // Crear entrada de simulación nueva con el mapa de páginas vistas inicializado
     localUsers[uid] = {
       first_visit: timestamp,
       last_visit: timestamp,
       device: device,
-      total_sessions: 1
+      total_sessions: 1,
+      paginas_vistas: {
+        [pageKey]: 1
+      }
     };
-    console.log(`📝 [Modo Demo] Perfil local creado para [${uid}].`);
+    console.log(`📝 [Modo Demo] Perfil local creado para [${uid}] con vista inicial a [${pageKey}].`);
   } else {
     // Actualizar usuario de retorno local
     localUsers[uid].last_visit = timestamp;
+    
+    // Inicializar mapa de páginas si no existe
+    if (!localUsers[uid].paginas_vistas) {
+      localUsers[uid].paginas_vistas = {};
+    }
+    
+    localUsers[uid].paginas_vistas[pageKey] = (localUsers[uid].paginas_vistas[pageKey] || 0) + 1;
+
     if (isNewSession) {
       localUsers[uid].total_sessions += 1;
-      console.log(`📝 [Modo Demo] Incrementada sesión (+1) local para [${uid}].`);
+      console.log(`📝 [Modo Demo] Sesión (+1) y pág [${pageKey}] (+1) local para [${uid}].`);
     } else {
-      console.log(`📝 [Modo Demo] Actualizado last_visit local para [${uid}].`);
+      console.log(`📝 [Modo Demo] Pág [${pageKey}] (+1) local para [${uid}].`);
     }
   }
 
